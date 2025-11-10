@@ -1,6 +1,33 @@
 import gspread
 from google.oauth2.service_account import Credentials
 import time
+# dashboard.py (top)
+import os, json, base64, tempfile
+
+# If you used base64 env var:
+b64 = os.environ.get("GCP_CREDS_BASE64")
+if b64:
+    creds_json = base64.b64decode(b64).decode("utf-8")
+    creds = json.loads(creds_json)
+
+    # Option A: use google libs from dict (recommended, no file write)
+    # Example for google-auth:
+    try:
+        from google.oauth2.service_account import Credentials
+        SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
+                  "https://www.googleapis.com/auth/drive"]
+        creds_obj = Credentials.from_service_account_info(creds, scopes=SCOPES)
+        # Now pass creds_obj to whatever library you use that accepts credentials
+    except Exception:
+        pass
+
+    # Option B: write to a temporary file and set GOOGLE_APPLICATION_CREDENTIALS
+    # (some libraries expect a file path)
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+    tmp.write(creds_json.encode("utf-8"))
+    tmp.flush()
+    tmp.close()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
 
 # ------------------ Google Sheets Setup ------------------
 SCOPE = [
